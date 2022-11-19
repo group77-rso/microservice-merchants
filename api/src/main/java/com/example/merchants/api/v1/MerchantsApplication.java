@@ -10,7 +10,7 @@ import org.eclipse.microprofile.openapi.annotations.info.Info;
 import org.eclipse.microprofile.openapi.annotations.info.License;
 import org.eclipse.microprofile.openapi.annotations.servers.Server;
 
-@OpenAPIDefinition(info = @Info(title = "Merchantss API", version = "v1",
+@OpenAPIDefinition(info = @Info(title = "Merchants API", version = "v1",
         contact = @Contact(email = "gg4792@student.uni-lj.si"),
         license = @License(name = "dev"), description = "API for managing merchants."),
         servers = @Server(url = "http://localhost:8080/"))

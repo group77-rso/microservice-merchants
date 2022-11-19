@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: products-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: products
+  template:
+    metadata:
+      labels:
+        app: products
+    spec:
+      containers:
+        - image: onlygregor/rso-test:latest
+          name: products
+          env:
+            - name: KUMULUZEE_DATASOURCES0_CONNECTIONURL
+              value: jdbc:postgresql://lucky.db.elephantsql.com/gaabkpkt
+            - name: KUMULUZEE_DATASOURCES0_USERNAME
+              value: gaabkpkt
+            - name: KUMULUZEE_DATASOURCES0_PASSWORD
+              value: ggYa2UyM1YXChuRz7o2kRDLnHi6dAkp9
+          ports:
+            - containerPort: 8080
+              name: server
+              protocol: TCP
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: products
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 8080
+      protocol: TCP
+      targetPort: server
+  selector:
+    app: products

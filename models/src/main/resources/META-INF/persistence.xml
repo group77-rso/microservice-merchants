@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" version="2.1">
-    <persistence-unit name="products-jpa" transaction-type="RESOURCE_LOCAL">
-        <non-jta-data-source>jdbc/ProductsDS</non-jta-data-source>
+    <persistence-unit name="merchants-jpa" transaction-type="RESOURCE_LOCAL">
+        <non-jta-data-source>jdbc/MerchantsDS</non-jta-data-source>
 
-        <class>com.example.products.models.entities.ProductEntity</class>
-        <class>com.example.products.models.converters.InstantAtributeConverter</class>
+        <class>com.example.merchants.models.entities.MerchantsEntity</class>
+        <class>com.example.merchants.models.converters.InstantAtributeConverter</class>
 
         <properties>
             <property name="javax.persistence.schema-generation.database.action" value="drop-and-create"/>

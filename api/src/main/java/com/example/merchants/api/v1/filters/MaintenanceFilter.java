@@ -1,4 +1,4 @@
-package com.example.products.api.v1.filters;
+package com.example.merchants.api.v1.filters;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -7,7 +7,7 @@ import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.Provider;
 
-import com.example.products.services.config.RestProperties;
+import com.example.merchants.services.config.RestProperties;
 
 @Provider
 @ApplicationScoped

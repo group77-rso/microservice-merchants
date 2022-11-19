@@ -1,5 +1,5 @@
 kumuluzee:
-  name: products-service
+  name: merchants-service
   env:
     name: dev
   version: 1.0.0
@@ -8,8 +8,8 @@ kumuluzee:
     http:
       port: 8080
   datasources:
-    - jndi-name: jdbc/ProductsDS
-      connection-url: jdbc:postgresql://localhost:5433/products
+    - jndi-name: jdbc/MerchantsDS
+      connection-url: jdbc:postgresql://localhost:5433/merchants
       username: dbuser
       password: postgres
       max-pool-size: 20

@@ -1,20 +1,20 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: products-deployment
+  name: merchants-deployment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: products
+      app: merchants
   template:
     metadata:
       labels:
-        app: products
+        app: merchants
     spec:
       containers:
-        - image: onlygregor/rso-test:latest
-          name: products
+        - image: barbaralipnik/merchants:latest
+          name: merchants
           env:
             - name: KUMULUZEE_DATASOURCES0_CONNECTIONURL
               value: jdbc:postgresql://lucky.db.elephantsql.com/gaabkpkt
@@ -32,7 +32,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: products
+  name: merchants
 spec:
   type: LoadBalancer
   ports:
@@ -40,4 +40,4 @@ spec:
       protocol: TCP
       targetPort: server
   selector:
-    app: products
+    app: merchants

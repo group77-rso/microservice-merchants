@@ -1,4 +1,4 @@
-package com.example.products.api.v1.resources;
+package com.example.merchants.api.v1.resources;
 
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
@@ -9,8 +9,8 @@ import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponse;
 import org.eclipse.microprofile.openapi.annotations.responses.APIResponses;
-import com.example.products.lib.Product;
-import com.example.products.services.beans.ProductBean;
+import com.example.merchants.lib.Merchant;
+import com.example.merchants.services.beans.MerchantBean;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
@@ -25,31 +25,31 @@ import java.util.logging.Logger;
 
 
 @ApplicationScoped
-@Path("/products")
+@Path("/merchants")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public class ProductsResource {
+public class MerchantsResource {
 
-    private Logger log = Logger.getLogger(ProductsResource.class.getName());
+    private Logger log = Logger.getLogger(MerchantsResource.class.getName());
 
     @Inject
-    private ProductBean productBean;
+    private MerchantBean merchantBean;
 
 
     @Context
     protected UriInfo uriInfo;
 
-    @Operation(description = "Get all products.", summary = "Get all products")
+    @Operation(description = "Get all merchants.", summary = "Get all merchants")
     @APIResponses({
             @APIResponse(responseCode = "200",
-                    description = "List of products",
-                    content = @Content(schema = @Schema(implementation = Product.class, type = SchemaType.ARRAY)),
+                    description = "List of merchants",
+                    content = @Content(schema = @Schema(implementation = Merchant.class, type = SchemaType.ARRAY)),
                     headers = {@Header(name = "X-Total-Count", description = "Number of objects in list")}
             )})
     @GET
     public Response getImageMetadata() {
 
-        List<Product> imageMetadata = productBean.getProductsFilter(uriInfo);
+        List<Merchant> imageMetadata = merchantBean.getMerchantsFilter(uriInfo);
 
         return Response.status(Response.Status.OK).entity(imageMetadata).build();
     }
@@ -60,20 +60,20 @@ public class ProductsResource {
             @APIResponse(responseCode = "200",
                     description = "Image metadata",
                     content = @Content(
-                            schema = @Schema(implementation = Product.class))
+                            schema = @Schema(implementation = Merchant.class))
             )})
     @GET
     @Path("/{imageMetadataId}")
     public Response getImageMetadata(@Parameter(description = "Metadata ID.", required = true)
                                      @PathParam("imageMetadataId") Integer imageMetadataId) {
 
-        Product product = productBean.getProducts(imageMetadataId);
+        Merchant merchant = merchantBean.getMerchants(imageMetadataId);
 
-        if (product == null) {
+        if (merchant == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response.status(Response.Status.OK).entity(product).build();
+        return Response.status(Response.Status.OK).entity(merchant).build();
     }
 
     @Operation(description = "Add image metadata.", summary = "Add metadata")
@@ -87,16 +87,16 @@ public class ProductsResource {
     public Response createImageMetadata(@RequestBody(
             description = "DTO object with image metadata.",
             required = true, content = @Content(
-            schema = @Schema(implementation = Product.class))) Product product) {
+            schema = @Schema(implementation = Merchant.class))) Merchant merchant) {
 
-        if (product.getName() == null) {
+        if (merchant.getName() == null) {
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
         else {
-            product = productBean.createProduct(product);
+            merchant = merchantBean.createMerchants(merchant);
         }
 
-        return Response.status(Response.Status.CONFLICT).entity(product).build();
+        return Response.status(Response.Status.CONFLICT).entity(merchant).build();
 
     }
 
@@ -115,12 +115,12 @@ public class ProductsResource {
                                      @RequestBody(
                                              description = "DTO object with image metadata.",
                                              required = true, content = @Content(
-                                             schema = @Schema(implementation = Product.class)))
-                                     Product product){
+                                             schema = @Schema(implementation = Merchant.class)))
+                                             Merchant merchant){
 
-        product = productBean.putProduct(imageMetadataId, product);
+        merchant = merchantBean.putMerchants(imageMetadataId, merchant);
 
-        if (product == null) {
+        if (merchant == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
@@ -144,7 +144,7 @@ public class ProductsResource {
     public Response deleteImageMetadata(@Parameter(description = "Metadata ID.", required = true)
                                         @PathParam("imageMetadataId") Integer imageMetadataId){
 
-        boolean deleted = productBean.deleteProduct(imageMetadataId);
+        boolean deleted = merchantBean.deleteMerchants(imageMetadataId);
 
         if (deleted) {
             return Response.status(Response.Status.NO_CONTENT).build();

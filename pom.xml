@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.example</groupId>
-    <artifactId>products</artifactId>
+    <artifactId>merchants</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
     <packaging>pom</packaging>
@@ -79,22 +79,22 @@
 
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>products-api</artifactId>
+                <artifactId>merchants-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>products-models</artifactId>
+                <artifactId>merchants-models</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>products-services</artifactId>
+                <artifactId>merchants-services</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.example</groupId>
-                <artifactId>products-lib</artifactId>
+                <artifactId>merchants-lib</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>

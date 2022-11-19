@@ -1,4 +1,4 @@
-package com.example.products.services.producers;
+package com.example.merchants.services.producers;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Disposes;
@@ -9,7 +9,7 @@ import javax.persistence.PersistenceUnit;
 
 public class PersistenceProducer {
 
-    @PersistenceUnit(unitName = "products-jpa")
+    @PersistenceUnit(unitName = "merchants-jpa")
     private EntityManagerFactory emf;
 
     @Produces

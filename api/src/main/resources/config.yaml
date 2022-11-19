@@ -9,7 +9,7 @@ kumuluzee:
       port: 8080
   datasources:
     - jndi-name: jdbc/MerchantsDS
-      connection-url: jdbc:postgresql://localhost:5433/merchants
+      connection-url: jdbc:postgresql://localhost:5432/merchants
       username: dbuser
       password: postgres
       max-pool-size: 20

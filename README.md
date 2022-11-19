@@ -53,8 +53,8 @@ Value: true or false
 kubectl version
 kubectl --help
 kubectl get nodes
-kubectl create -f products-deployment.yaml 
-kubectl apply -f products-deployment.yaml 
+kubectl create -f merchants-deployment.yaml 
+kubectl apply -f merchants-deployment.yaml 
 kubectl get services 
 kubectl get deployments
 kubectl get pods

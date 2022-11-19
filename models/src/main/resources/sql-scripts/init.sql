@@ -1,3 +1,3 @@
-INSERT INTO merchants (title) VALUES ('Jager');
-INSERT INTO merchants (title) VALUES ('Mercator');
-INSERT INTO merchants (title) VALUES ('Spar');
+INSERT INTO merchants (name) VALUES ('Jager');
+INSERT INTO merchants (name) VALUES ('Mercator');
+INSERT INTO merchants (name) VALUES ('Spar');

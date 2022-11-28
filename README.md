@@ -24,8 +24,8 @@ Available at: localhost:8080/v1/merchants
 docker build -t template-image .   
 docker images
 docker run template-image    
-docker tag template-image onlygregor/template-image   
-docker push onlygregor/template-image
+docker tag template-image barbaralipnik/merchants:latest  
+docker push barbaralipnik/merchants
 docker ps
 ```
 

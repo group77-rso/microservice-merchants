@@ -17,11 +17,11 @@ spec:
           name: merchants
           env:
             - name: KUMULUZEE_DATASOURCES0_CONNECTIONURL
-              value: jdbc:postgresql://lucky.db.elephantsql.com/gaabkpkt
+              value: jdbc:postgresql://heffalump.db.elephantsql.com/xozusiee
             - name: KUMULUZEE_DATASOURCES0_USERNAME
-              value: gaabkpkt
+              value: xozusiee
             - name: KUMULUZEE_DATASOURCES0_PASSWORD
-              value: ggYa2UyM1YXChuRz7o2kRDLnHi6dAkp9
+              value: Y_-mrfwxoxkMj3COJ0XLyKKVO0FHn95o
           ports:
             - containerPort: 8080
               name: server

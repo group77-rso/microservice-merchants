@@ -17,6 +17,10 @@ kumuluzee:
     checks:
       data-source-health-check:
         type: liveness
-        jndi-name: jdbc/ImageMetadataDS
+        jndi-name: jdbc/MerchantsDS
+  metrics:
+    web-instrumentation:
+      - name: merchants-endpoint
+        url-pattern: /v1/merchants/*
 rest-properties:
   maintenance-mode: false

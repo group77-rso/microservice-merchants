@@ -13,7 +13,7 @@ import org.eclipse.microprofile.openapi.annotations.servers.Server;
 @OpenAPIDefinition(info = @Info(title = "Merchants API", version = "v1",
         contact = @Contact(email = "gg4792@student.uni-lj.si"),
         license = @License(name = "dev"), description = "API for managing merchants."),
-        servers = @Server(url = "http://localhost:8080/"))
+        servers = @Server(url = "http://localhost:8081/"))
 @ApplicationPath("/v1")
 public class MerchantsApplication extends Application {
 

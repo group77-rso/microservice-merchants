@@ -12,12 +12,12 @@ mvn clean package
 cd api/target
 java -jar merchants-api-1.0.0-SNAPSHOT.jar
 ```
-Available at: localhost:8080/v1/merchants
+Available at: localhost:8081/v1/merchants
 
 ## Run in IntelliJ IDEA
 Add new Run configuration and select the Application type. In the next step, select the module api and for the main class com.kumuluz.ee.EeApplication.
 
-Available at: localhost:8080/v1/merchants
+Available at: localhost:8081/v1/merchants
 
 ## Docker commands
 ```bash
@@ -35,7 +35,7 @@ docker network rm rso
 docker network create rso
 docker run -d --name pg-merchants -e POSTGRES_USER=dbuser -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=merchants -p 5432:5432 --network rso postgres:13
 docker inspect pg-merchants
-docker run -p 8080:8080 --network rso -e KUMULUZEE_DATASOURCES0_CONNECTIONURL=jdbc:postgresql://pg-merchants:5432/merchants barbaralipnik/merchants:latest
+docker run -p 8081:8081 --network rso -e KUMULUZEE_DATASOURCES0_CONNECTIONURL=jdbc:postgresql://pg-merchants:5432/merchants barbaralipnik/merchants:latest
 ```
 
 ## Consul

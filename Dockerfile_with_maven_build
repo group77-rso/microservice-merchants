@@ -7,5 +7,5 @@ FROM amazoncorretto:18
 RUN mkdir /app
 WORKDIR /app
 COPY --from=build ./app/api/target/merchants-api-1.0.0-SNAPSHOT.jar /app
-EXPOSE 8080
+EXPOSE 8081
 CMD ["java", "-jar", "merchants-api-1.0.0-SNAPSHOT.jar"]

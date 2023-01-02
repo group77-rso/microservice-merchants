@@ -44,3 +44,5 @@ kumuluzee:
       </Configuration>'
 rest-properties:
   maintenance-mode: false
+microservice-locations:
+  products: http://localhost:8080

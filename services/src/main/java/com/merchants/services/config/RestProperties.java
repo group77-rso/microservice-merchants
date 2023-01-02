@@ -1,4 +1,4 @@
-package com.example.merchants.services.config;
+package com.merchants.services.config;
 
 import javax.enterprise.context.ApplicationScoped;
 

@@ -1,4 +1,4 @@
-package com.example.merchants.models.converters;
+package com.merchants.models.converters;
 
 import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;

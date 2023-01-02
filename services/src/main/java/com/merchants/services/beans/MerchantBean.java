@@ -1,4 +1,4 @@
-package com.example.merchants.services.beans;
+package com.merchants.services.beans;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -13,9 +13,9 @@ import java.util.stream.Collectors;
 import com.kumuluz.ee.rest.beans.QueryParameters;
 import com.kumuluz.ee.rest.utils.JPAUtils;
 
-import com.example.merchants.lib.Merchant;
-import com.example.merchants.models.converters.MerchantsConverter;
-import com.example.merchants.models.entities.MerchantsEntity;
+import com.merchants.lib.Merchant;
+import com.merchants.models.converters.MerchantsConverter;
+import com.merchants.models.entities.MerchantsEntity;
 
 
 @RequestScoped
@@ -54,7 +54,7 @@ public class MerchantBean {
             throw new NotFoundException();
         }
 
-        Merchant merchant = MerchantsConverter.toDto(merchantEntity);
+        Merchant merchant = MerchantsConverter.toDto(merchantEntity, true);
 
         return merchant;
     }

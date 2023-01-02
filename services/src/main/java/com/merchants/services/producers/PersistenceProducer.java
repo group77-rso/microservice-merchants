@@ -1,4 +1,4 @@
-package com.example.merchants.services.producers;
+package com.merchants.services.producers;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.inject.Disposes;

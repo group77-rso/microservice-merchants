@@ -5,10 +5,10 @@ public class Product {
 
     private Integer productId;
     private String name;
+    private Integer categoryId;
     private float price;
+    private String productLink;
 
-    // Ko prikazujemo produkte je zaenkrat dovolj, da navedemo samo ime kategorije.
-    private String category;
 
     public String getName() {
         return name;
@@ -26,12 +26,12 @@ public class Product {
         this.productId = productId;
     }
 
-    public String getCategory() {
-        return category;
+    public Integer getCategoryId() {
+        return categoryId;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setCategoryId(Integer categoryId) {
+        this.categoryId = categoryId;
     }
 
     public float getPrice() {
@@ -40,5 +40,13 @@ public class Product {
 
     public void setPrice(float price) {
         this.price = price;
+    }
+
+    public String getProductLink() {
+        return productLink;
+    }
+
+    public void setProductLink(String productLink) {
+        this.productLink = productLink;
     }
 }

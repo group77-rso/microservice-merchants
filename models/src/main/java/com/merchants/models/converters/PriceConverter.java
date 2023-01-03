@@ -12,8 +12,17 @@ public class PriceConverter {
         dto.setProductId(entity.getProductId());
         dto.setMerchant(entity.getMerchant().getName());
         dto.setPrice(entity.getPrice());
+        dto.setProductLink(entity.getLink());
 
         return dto;
     }
 
+    public static PriceEntity toEntity(Price price) {
+        PriceEntity entity = new PriceEntity();
+        entity.setPrice(price.getPrice());
+        entity.setLink(price.getProductLink());
+        entity.setProductId(price.getProductId());
+        // todo: potrebno je se settati merchanta
+        return entity;
+    }
 }

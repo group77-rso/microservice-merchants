@@ -5,6 +5,7 @@ import com.merchants.lib.Merchant;
 import com.merchants.lib.Price;
 import com.merchants.lib.Product;
 import com.merchants.services.beans.MerchantBean;
+import com.merchants.services.beans.PriceBean;
 import com.merchants.services.config.MicroserviceLocations;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
@@ -31,7 +32,6 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,6 +48,9 @@ public class MerchantsResource {
 
     @Inject
     private MerchantBean merchantBean;
+
+    @Inject
+    private PriceBean priceBean;
 
     @Inject
     private MicroserviceLocations microserviceLocations;
@@ -125,9 +128,10 @@ public class MerchantsResource {
 
             Set<Integer> productIdsForMerchant = merchant.getPrices().stream().map(Price::getProductId).collect(Collectors.toSet());
             Set<Product> productsForMerchant = products.stream().filter(p -> productIdsForMerchant.contains(p.getProductId())).collect(Collectors.toSet());
+
             productsForMerchant.forEach(product -> setPriceForProduct(product, merchant));
             merchant.setProducts(productsForMerchant);
-            merchant.setPrices(null);  // to lahko odstranimo in pac vracamo do neke mere podvojene podatke
+            merchant.setPrices(null);  // ce je to zakomentirano (ali odstranjeno), vracamo do neke mere podvojene podatke
         } catch (IOException e) {
             log.log(Level.SEVERE, String.format("Finding products failed with error %s", e.getMessage()));
         } finally {
@@ -139,8 +143,11 @@ public class MerchantsResource {
 
     private void setPriceForProduct(Product product, Merchant merchant) {
         Integer productId = product.getProductId();
-        Optional<Price> priceOptional = merchant.getPrices().stream().filter(price -> price.getProductId() == productId).findFirst();
-        priceOptional.ifPresent(price -> product.setPrice(price.getPrice()));
+        log.info(String.format("Searching DB for price of product %d for merchant %d", productId, merchant.getMerchantId()));
+        Price price = priceBean.getPriceForProductAndMerchant(productId, merchant.getMerchantId());
+        log.info("Found: " + price.toString());
+        product.setPrice(price.getPrice());
+        product.setProductLink(price.getProductLink());
     }
 
     @Operation(description = "Add a merchant.", summary = "Add merchant")

@@ -25,6 +25,9 @@ public class PriceEntity {
     @Column(name = "price")
     private float price;
 
+    @Column(name = "link")
+    private String link;
+
     public Integer getId() {
         return id;
     }
@@ -56,5 +59,13 @@ public class PriceEntity {
 
     public void setPrice(float price) {
         this.price = price;
+    }
+
+    public String getLink() {
+        return link;
+    }
+
+    public void setLink(String link) {
+        this.link = link;
     }
 }

@@ -5,6 +5,7 @@ public class Price {
     private String merchant;
     private Integer productId;
     private float price;
+    private String productLink;
 
     public String getMerchant() {
         return merchant;
@@ -28,5 +29,13 @@ public class Price {
 
     public void setPrice(float price) {
         this.price = price;
+    }
+
+    public String getProductLink() {
+        return productLink;
+    }
+
+    public void setProductLink(String productLink) {
+        this.productLink = productLink;
     }
 }

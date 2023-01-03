@@ -1,6 +1,7 @@
 package com.merchants.api.v1.resources;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.merchants.lib.Comparison;
 import com.merchants.lib.Merchant;
@@ -28,6 +29,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -76,6 +78,35 @@ public class MerchantsResource {
         return Response.status(Response.Status.OK).entity(merchants).build();
     }
 
+    // todo: ta test je potrebno odstraniti
+    @GET
+    @Path("/test")
+    public Response test2(@Parameter(required = true) @QueryParam("have") String haveCurrency,
+                          @Parameter(required = true) @QueryParam("want") String wantCurrency,
+                          @Parameter(required = true) @QueryParam("amount") String amount) {
+
+        Float convertedValue = convertCurrency(haveCurrency, wantCurrency, amount);
+
+        return Response.status(Response.Status.OK).build();
+    }
+
+    private Float convertCurrency(String haveCurrency, String wantCurrency, String amount) {
+        try {
+            // prepare url
+            String specifics = String.format("?want=%s&have=%s&amount=%s", wantCurrency, haveCurrency, amount);
+            URL url = new URL("https://api.api-ninjas.com/v1/convertcurrency" + specifics);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestProperty("accept", "application/json");
+            InputStream responseStream = connection.getInputStream();
+            ObjectMapper mapper = new ObjectMapper();
+            JsonNode root = mapper.readTree(responseStream);
+            return Float.valueOf(root.path("new_amount").asText());
+        } catch (Exception e) {
+            log.info(e.toString());
+        }
+        return null;
+    }
+
 
     @Operation(description = "Get metadata for an image.", summary = "Get metadata for an image")
     @APIResponses({
@@ -87,7 +118,8 @@ public class MerchantsResource {
     @GET
     @Path("/{merchantId}")
     public Response getMerchants(@Parameter(description = "Merchant ID.", required = true)
-                                 @PathParam("merchantId") Integer merchantId) {
+                                 @PathParam("merchantId") Integer merchantId,
+                                 @QueryParam("want") String wantCurrency) {
 
         Merchant merchant = merchantBean.getMerchants(merchantId);
 
@@ -115,6 +147,15 @@ public class MerchantsResource {
         Set<Product> productsForMerchant = products.stream().filter(p -> productIdsForMerchant.contains(p.getProductId())).collect(Collectors.toSet());
 
         productsForMerchant.forEach(product -> setPriceForProduct(product, merchant));
+
+        // ce smo nastavili parameter za pretvarjanje valut
+        if (wantCurrency != null) {
+            productsForMerchant.forEach(product -> {
+                Float newPrice = convertCurrency("EUR", wantCurrency, String.valueOf(product.getPrice()));
+                product.setPrice(newPrice);
+            });
+        }
+
         merchant.setProducts(productsForMerchant);
         merchant.setPrices(null);  // ce je to zakomentirano (ali odstranjeno), vracamo do neke mere podvojene podatke
 
@@ -126,7 +167,8 @@ public class MerchantsResource {
     @GET
     @Path("/compareprices/{productId}")
     public Response compareMerchantPrices(@Parameter(description = "Product ID.", required = true)
-                                          @PathParam("productId") Integer productId) throws JsonProcessingException {
+                                          @PathParam("productId") Integer productId,
+                                          @QueryParam("want") String wantCurrency) throws JsonProcessingException {
 
         String content = callRestGet(microserviceLocations.getProducts() + "/v1/products/" + productId);
         if (content == null) {
@@ -141,6 +183,14 @@ public class MerchantsResource {
 
         // Poiscemo trgovce, ki imajo izbrani produkt
         Set<Price> pricesForProduct = priceBean.findPricesForProduct(productId);
+
+        // ce smo nastavili parameter za pretvarjanje valut
+        if (wantCurrency != null) {
+            pricesForProduct.forEach(price -> {
+                Float newPrice = convertCurrency("EUR", wantCurrency, String.valueOf(price));
+                price.setPrice(newPrice);
+            });
+        }
 
         Comparison comparison = new Comparison();
         comparison.setProduct(product);

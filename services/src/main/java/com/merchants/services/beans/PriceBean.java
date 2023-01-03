@@ -14,6 +14,7 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
+import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -154,5 +155,23 @@ public class PriceBean {
         if (em.getTransaction().isActive()) {
             em.getTransaction().rollback();
         }
+    }
+
+    public Set<Price> findPricesForProduct(Integer productId) {
+
+        String sql = "SELECT p FROM PriceEntity p" +
+                " LEFT JOIN FETCH p.merchant m" +
+                " WHERE p.productId = :productId";
+
+        List<PriceEntity> result = em.createQuery(sql, PriceEntity.class)
+                .setParameter("productId", productId)
+                .getResultList();
+
+        if (result == null) {
+            throw new NotFoundException();
+        }
+
+        Set<Price> priceList = result.stream().map(PriceConverter::toDto).collect(Collectors.toSet());
+        return priceList;
     }
 }

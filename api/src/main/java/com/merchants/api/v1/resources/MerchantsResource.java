@@ -1,6 +1,8 @@
 package com.merchants.api.v1.resources;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.merchants.lib.Comparison;
 import com.merchants.lib.Merchant;
 import com.merchants.lib.Price;
 import com.merchants.lib.Product;
@@ -92,9 +94,65 @@ public class MerchantsResource {
         if (merchant == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
+        String content = callRestGet(microserviceLocations.getProducts() + "/v1/products/");
+        if (content == null) {
+            return null;
+        }
 
+        // Map objects that we got
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.writerWithDefaultPrettyPrinter();
+
+        ArrayList<Product> products = new ArrayList<>();
         try {
-            URL url = new URL(microserviceLocations.getProducts() + "/v1/products");
+            products = objectMapper.readValue(
+                    content,
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, Product.class));
+        } catch (JsonProcessingException e) {
+            log.log(Level.SEVERE, String.format("%s : Can not parse json to java object.", this.getClass().getName()));
+        }
+        Set<Integer> productIdsForMerchant = merchant.getPrices().stream().map(Price::getProductId).collect(Collectors.toSet());
+        Set<Product> productsForMerchant = products.stream().filter(p -> productIdsForMerchant.contains(p.getProductId())).collect(Collectors.toSet());
+
+        productsForMerchant.forEach(product -> setPriceForProduct(product, merchant));
+        merchant.setProducts(productsForMerchant);
+        merchant.setPrices(null);  // ce je to zakomentirano (ali odstranjeno), vracamo do neke mere podvojene podatke
+
+
+        return Response.status(Response.Status.OK).entity(merchant).build();
+    }
+
+
+    @GET
+    @Path("/compareprices/{productId}")
+    public Response compareMerchantPrices(@Parameter(description = "Product ID.", required = true)
+                                          @PathParam("productId") Integer productId) throws JsonProcessingException {
+
+        String content = callRestGet(microserviceLocations.getProducts() + "/v1/products/" + productId);
+        if (content == null) {
+            log.log(Level.WARNING, String.format("Product for id %d was not found.", productId));
+            return Response.status(Response.Status.BAD_REQUEST).build();
+        }
+
+        // Map json to object
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.writerWithDefaultPrettyPrinter();
+        Product product = objectMapper.readValue(content, Product.class);
+
+        // Poiscemo trgovce, ki imajo izbrani produkt
+        Set<Price> pricesForProduct = priceBean.findPricesForProduct(productId);
+
+        Comparison comparison = new Comparison();
+        comparison.setProduct(product);
+        comparison.setPrices(pricesForProduct);
+
+        return Response.status(Response.Status.OK).entity(comparison).build();
+    }
+
+    private String callRestGet(String urlString) {
+        StringBuilder content = new StringBuilder();
+        try {
+            URL url = new URL(urlString);
             conn = (HttpURLConnection) url.openConnection();
 
             // Request setup
@@ -104,41 +162,25 @@ public class MerchantsResource {
             conn.setRequestProperty("Content-Type", "application/json");
 
             int status = conn.getResponseCode();
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
-
-            String inputLine;
-            StringBuilder content = new StringBuilder();
             if (status > 300) {
-                log.log(Level.SEVERE, String.format("Status %d", status));
+                log.log(Level.SEVERE, String.format("Reaching %s failed with status %d.", url, status));
                 conn.disconnect();
                 return null;
             }
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
+            String inputLine;
+
             while ((inputLine = in.readLine()) != null) {
                 content.append(inputLine);
             }
             in.close();
-
-            // Map objects that we got
-            ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.writerWithDefaultPrettyPrinter();
-
-            ArrayList<Product> products = objectMapper.readValue(
-                    content.toString(),
-                    objectMapper.getTypeFactory().constructCollectionType(List.class, Product.class));
-
-            Set<Integer> productIdsForMerchant = merchant.getPrices().stream().map(Price::getProductId).collect(Collectors.toSet());
-            Set<Product> productsForMerchant = products.stream().filter(p -> productIdsForMerchant.contains(p.getProductId())).collect(Collectors.toSet());
-
-            productsForMerchant.forEach(product -> setPriceForProduct(product, merchant));
-            merchant.setProducts(productsForMerchant);
-            merchant.setPrices(null);  // ce je to zakomentirano (ali odstranjeno), vracamo do neke mere podvojene podatke
         } catch (IOException e) {
-            log.log(Level.SEVERE, String.format("Finding products failed with error %s", e.getMessage()));
+            log.log(Level.SEVERE, String.format("Connecting %s was unsuccessful. Error %s occured.", urlString, e.getMessage()));
         } finally {
             conn.disconnect();
         }
-
-        return Response.status(Response.Status.OK).entity(merchant).build();
+        return content.toString();
     }
 
     private void setPriceForProduct(Product product, Merchant merchant) {

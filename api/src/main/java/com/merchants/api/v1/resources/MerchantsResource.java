@@ -32,11 +32,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -49,6 +55,7 @@ import java.util.stream.Collectors;
 public class MerchantsResource {
 
     private Logger log = Logger.getLogger(MerchantsResource.class.getName());
+    private Float conversion;
 
     @Inject
     private MerchantBean merchantBean;
@@ -78,33 +85,87 @@ public class MerchantsResource {
         return Response.status(Response.Status.OK).entity(merchants).build();
     }
 
-    // todo: ta test je potrebno odstraniti
-    @GET
-    @Path("/test")
-    public Response test2(@Parameter(required = true) @QueryParam("have") String haveCurrency,
-                          @Parameter(required = true) @QueryParam("want") String wantCurrency,
-                          @Parameter(required = true) @QueryParam("amount") String amount) {
+    @POST
+    @Path("/async")
+    public Response asynchronousPost() {
 
-        Float convertedValue = convertCurrency(haveCurrency, wantCurrency, amount);
+        try {
+            String requestBody = "{\n" +
+                    "\"name\": \"Nova kategorija\"\n" +
+                    "}";
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(microserviceLocations.getProducts() + "/v1/categories"))
+                    .timeout(Duration.ofMinutes(2))
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(requestBody))
+                    .build();
 
+            HttpClient.newBuilder()
+                    .build()
+                    .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(HttpResponse::body)
+                    .thenAccept(s -> log.log(Level.INFO, String.format("Post je nazaj! Dobili smo %s.", s)));
+
+        } catch (Exception e) {
+            log.log(Level.SEVERE, String.format("Post was unsuccessful because of %s.", e));
+        }
         return Response.status(Response.Status.OK).build();
     }
 
-    private Float convertCurrency(String haveCurrency, String wantCurrency, String amount) {
+
+    @GET
+    @Path("/async")
+    public Response asynchronousGet() {
+
         try {
-            // prepare url
-            String specifics = String.format("?want=%s&have=%s&amount=%s", wantCurrency, haveCurrency, amount);
-            URL url = new URL("https://api.api-ninjas.com/v1/convertcurrency" + specifics);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestProperty("accept", "application/json");
-            InputStream responseStream = connection.getInputStream();
-            ObjectMapper mapper = new ObjectMapper();
-            JsonNode root = mapper.readTree(responseStream);
-            return Float.valueOf(root.path("new_amount").asText());
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(microserviceLocations.getProducts() + "/v1/products/slow"))
+                    .timeout(Duration.ofMinutes(2))
+                    .header("Content-Type", "application/json")
+                    .GET()
+                    .build();
+
+            CompletableFuture<Void> response = HttpClient.newBuilder()
+                    .build()
+                    .sendAsync(request, HttpResponse.BodyHandlers.ofString())
+                    .thenApply(HttpResponse::body)
+                    .thenAccept(s -> log.log(Level.INFO, String.format("Get je nazaj! Dobili smo %s.", s)));
+
         } catch (Exception e) {
-            log.info(e.toString());
+            log.log(Level.SEVERE, String.format("Post was unsuccessful because of %s.", e));
         }
-        return null;
+        return Response.status(Response.Status.OK).build();
+    }
+
+    /**
+     * Converts one currency to another
+     *
+     * @param haveCurrency a three letter currency code (like EUR, USD, RUB...) of a currenci we are converting FROM,
+     * @param wantCurrency currency code of a currency we want,
+     * @param amount       we want to convert.
+     * @return converted value
+     * ATTENTION: method uses class variable 'conversion'. Make sure to set it tu null after each conversion process!
+     */
+    private Float convertCurrency(String haveCurrency, String wantCurrency, String amount) {
+        if (this.conversion == null) {
+            try {
+                // prepare url
+                String specifics = String.format("?want=%s&have=%s&amount=1", wantCurrency, haveCurrency);
+                URL url = new URL("https://api.api-ninjas.com/v1/convertcurrency" + specifics);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestProperty("accept", "application/json");
+                InputStream responseStream = connection.getInputStream();
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode root = mapper.readTree(responseStream);
+                this.conversion = Float.valueOf(root.path("new_amount").asText());
+                log.info(String.format("Converting prices to %s with convertion rate %.2f", wantCurrency, this.conversion));
+            } catch (Exception e) {
+                log.info(e.toString());
+                return null;
+            }
+        }
+        float convertedValue = Float.parseFloat(amount) * this.conversion;
+        return Math.round(convertedValue * 100f) / 100f;
     }
 
 
@@ -154,6 +215,7 @@ public class MerchantsResource {
                 Float newPrice = convertCurrency("EUR", wantCurrency, String.valueOf(product.getPrice()));
                 product.setPrice(newPrice);
             });
+            this.conversion = null;
         }
 
         merchant.setProducts(productsForMerchant);
@@ -190,6 +252,7 @@ public class MerchantsResource {
                 Float newPrice = convertCurrency("EUR", wantCurrency, String.valueOf(price));
                 price.setPrice(newPrice);
             });
+            this.conversion = null;
         }
 
         Comparison comparison = new Comparison();
@@ -199,6 +262,12 @@ public class MerchantsResource {
         return Response.status(Response.Status.OK).entity(comparison).build();
     }
 
+    /**
+     * Functions that rends GET request and returns responses string
+     *
+     * @param urlString url that we want to call
+     * @return response content as a string
+     */
     private String callRestGet(String urlString) {
         StringBuilder content = new StringBuilder();
         try {

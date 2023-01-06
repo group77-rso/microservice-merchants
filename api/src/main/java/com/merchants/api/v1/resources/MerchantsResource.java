@@ -3,6 +3,7 @@ package com.merchants.api.v1.resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kumuluz.ee.logs.cdi.Log;
 import com.merchants.lib.Comparison;
 import com.merchants.lib.Merchant;
 import com.merchants.lib.Price;
@@ -14,6 +15,7 @@ import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
 import org.eclipse.microprofile.openapi.annotations.media.Content;
+import org.eclipse.microprofile.openapi.annotations.media.ExampleObject;
 import org.eclipse.microprofile.openapi.annotations.media.Schema;
 import org.eclipse.microprofile.openapi.annotations.parameters.Parameter;
 import org.eclipse.microprofile.openapi.annotations.parameters.RequestBody;
@@ -48,6 +50,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 
+@Log
 @ApplicationScoped
 @Path("/merchants")
 @Produces(MediaType.APPLICATION_JSON)
@@ -70,14 +73,14 @@ public class MerchantsResource {
     @Context
     protected UriInfo uriInfo;
 
-    @Operation(description = "Get all merchants.", summary = "Get all merchants")
+    @GET
+    @Operation(description = "Gets a list of all merchants from DB.", summary = "Get all merchants")
     @APIResponses({
             @APIResponse(responseCode = "200",
                     description = "List of merchants",
                     content = @Content(schema = @Schema(implementation = Merchant.class, type = SchemaType.ARRAY)),
                     headers = {@Header(name = "X-Total-Count", description = "Number of objects in list")}
             )})
-    @GET
     public Response getMerchants() {
 
         List<Merchant> merchants = merchantBean.getMerchantsFilter(uriInfo);
@@ -86,6 +89,7 @@ public class MerchantsResource {
     }
 
     @POST
+    @Operation(description = "Used to demonstrate asynchronous post call. Asynchronously calls an endpoint to create a new category.", summary = "Asynchronously creates new category")
     @Path("/async")
     public Response asynchronousPost() {
 
@@ -114,6 +118,7 @@ public class MerchantsResource {
 
 
     @GET
+    @Operation(description = "Method used to demonstrate asynchronous get call. Calls a slow method that will return a greeting.", summary = "Asynchronously calls a dummy method")
     @Path("/async")
     public Response asynchronousGet() {
 
@@ -169,18 +174,17 @@ public class MerchantsResource {
     }
 
 
-    @Operation(description = "Get metadata for an image.", summary = "Get metadata for an image")
+    @GET
+    @Operation(description = "Get information about a specific merchant. Including their products and prices.", summary = "Get merchant information")
     @APIResponses({
             @APIResponse(responseCode = "200",
-                    description = "Image metadata",
+                    description = "merchant details",
                     content = @Content(
                             schema = @Schema(implementation = Merchant.class))
             )})
-    @GET
     @Path("/{merchantId}")
-    public Response getMerchants(@Parameter(description = "Merchant ID.", required = true)
-                                 @PathParam("merchantId") Integer merchantId,
-                                 @QueryParam("want") String wantCurrency) {
+    public Response getMerchants(@Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
+                                 @Parameter(description = "Three letter currency code.", example = "RUB") @QueryParam("want") String wantCurrency) {
 
         Merchant merchant = merchantBean.getMerchants(merchantId);
 
@@ -221,16 +225,16 @@ public class MerchantsResource {
         merchant.setProducts(productsForMerchant);
         merchant.setPrices(null);  // ce je to zakomentirano (ali odstranjeno), vracamo do neke mere podvojene podatke
 
-
+        log.info(String.format("Fetching merchant for id %d.", merchantId));
         return Response.status(Response.Status.OK).entity(merchant).build();
     }
 
 
     @GET
+    @Operation(description = "Get prices for all merchants that have the selected product.", summary = "Get prices for product")
     @Path("/compareprices/{productId}")
-    public Response compareMerchantPrices(@Parameter(description = "Product ID.", required = true)
-                                          @PathParam("productId") Integer productId,
-                                          @QueryParam("want") String wantCurrency) throws JsonProcessingException {
+    public Response compareMerchantPrices(@Parameter(description = "Product ID.", required = true, example = "1001") @PathParam("productId") Integer productId,
+                                          @Parameter(description = "Three letter currency code", example = "RUB") @QueryParam("want") String wantCurrency) throws JsonProcessingException {
 
         String content = callRestGet(microserviceLocations.getProducts() + "/v1/products/" + productId);
         if (content == null) {
@@ -259,6 +263,7 @@ public class MerchantsResource {
         comparison.setProduct(product);
         comparison.setPrices(pricesForProduct);
 
+        log.info(String.format("Comparing prices for product with id %s", productId));
         return Response.status(Response.Status.OK).entity(comparison).build();
     }
 
@@ -302,6 +307,12 @@ public class MerchantsResource {
         return content.toString();
     }
 
+    /**
+     * Helper method searches DB for prices and sets them on Product object.
+     *
+     * @param product  product we want to set prices on
+     * @param merchant merchant for which we want the price
+     */
     private void setPriceForProduct(Product product, Merchant merchant) {
         Integer productId = product.getProductId();
         log.info(String.format("Searching DB for price of product %d for merchant %d", productId, merchant.getMerchantId()));
@@ -311,18 +322,20 @@ public class MerchantsResource {
         product.setProductLink(price.getProductLink());
     }
 
+    @POST
     @Operation(description = "Add a merchant.", summary = "Add merchant")
     @APIResponses({
-            @APIResponse(responseCode = "201",
-                    description = "Merchant successfully added."
-            ),
+            @APIResponse(responseCode = "201", description = "Merchant successfully added."),
             @APIResponse(responseCode = "405", description = "Validation error .")
     })
-    @POST
-    public Response createMerchant(@RequestBody(
-            description = "DTO object with merchants.",
-            required = true, content = @Content(
-            schema = @Schema(implementation = Merchant.class))) Merchant merchant) {
+    @RequestBody(description = "Details of the Item to be created", required = true,
+            content = @Content(
+                    schema = @Schema(implementation = Merchant.class),
+                    examples = @ExampleObject(name = "Adding new merchant", value = "{\n" +
+                            "    \"name\": \"Hofer\"\n" +
+                            "}")))
+    public Response createMerchant(
+            Merchant merchant) {
 
         if (merchant.getName() == null) {
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -330,24 +343,22 @@ public class MerchantsResource {
             merchant = merchantBean.createMerchants(merchant);
         }
 
+        log.info(String.format("New merchant with id %d was created.", merchant.getMerchantId()));
         return Response.status(Response.Status.CONFLICT).entity(merchant).build();
-
     }
 
 
-    @Operation(description = "Update metadata for an image.", summary = "Update metadata")
+    @PUT
+    @Operation(description = "Update merchant information.", summary = "Update merchant")
     @APIResponses({
             @APIResponse(
                     responseCode = "200",
-                    description = "Metadata successfully updated."
-            )
+                    description = "Merchant successfully updated.")
     })
-    @PUT
     @Path("{merchantId}")
-    public Response putMerchant(@Parameter(description = "Metadata ID.", required = true)
-                                @PathParam("merchantId") Integer merchantId,
+    public Response putMerchant(@Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
                                 @RequestBody(
-                                        description = "DTO object with image metadata.",
+                                        description = "DTO object with merchant information.",
                                         required = true, content = @Content(
                                         schema = @Schema(implementation = Merchant.class)))
                                         Merchant merchant) {
@@ -358,25 +369,25 @@ public class MerchantsResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response.status(Response.Status.NOT_MODIFIED).build();
+        log.info(String.format("Merchant with id %d was deleted.", merchantId));
+        return Response.status(Response.Status.OK).build();
 
     }
 
-    @Operation(description = "Delete metadata for an image.", summary = "Delete metadata")
+    @DELETE
+    @Operation(description = "Delete merchant from DB.", summary = "Delete merchant")
     @APIResponses({
             @APIResponse(
                     responseCode = "200",
-                    description = "Metadata successfully deleted."
+                    description = "Merchant successfully deleted."
             ),
             @APIResponse(
                     responseCode = "404",
                     description = "Not found."
             )
     })
-    @DELETE
     @Path("{merchantId}")
-    public Response deleteMerchant(@Parameter(description = "Metadata ID.", required = true)
-                                   @PathParam("merchantId") Integer merchantId) {
+    public Response deleteMerchant(@Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId) {
 
         boolean deleted = merchantBean.deleteMerchants(merchantId);
 

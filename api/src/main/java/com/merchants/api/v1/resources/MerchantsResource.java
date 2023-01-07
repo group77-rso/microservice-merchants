@@ -44,6 +44,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -78,21 +79,34 @@ public class MerchantsResource {
     @APIResponses({
             @APIResponse(responseCode = "200",
                     description = "List of merchants",
-                    content = @Content(schema = @Schema(implementation = Merchant.class, type = SchemaType.ARRAY)),
-                    headers = {@Header(name = "X-Total-Count", description = "Number of objects in list")}
-            )})
-    public Response getMerchants() {
+                    content = @Content(schema = @Schema(implementation = Merchant.class, type = SchemaType.ARRAY),
+                            example = "{\n" +
+                                    "  \"logoUrl\": \"https://www.mercatorgroup.si/assets/Logotip-lezec/mercator-logotip-positive-lezeci.png\",\n" +
+                                    "  \"merchantId\": 1001,\n" +
+                                    "  \"name\": \"Mercator\"\n" +
+                                    "}"),
+                    headers = {@Header(name = "X-Total-Count", description = "Number of objects in list"),
+                            @Header(name = "requestId", description = "Unique request id.")})})
+    public Response getMerchants(@Parameter(hidden = true) @HeaderParam("requestId") String requestId) {
+
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
 
         List<Merchant> merchants = merchantBean.getMerchantsFilter(uriInfo);
-        log.log(Level.INFO, String.format("Listing %d merchants", merchants.size()));
-        return Response.status(Response.Status.OK).entity(merchants).build();
+
+        log.log(Level.INFO, String.format("Listing %d merchants", merchants.size()) + " - requestId: " + requestId);
+        return Response.status(Response.Status.OK)
+                .entity(merchants)
+                .header("X-Total-Count", merchants.size())
+                .header("requestId", requestId)
+                .build();
     }
 
     @POST
     @Operation(description = "Used to demonstrate asynchronous post call. Asynchronously calls an endpoint to create a new category.", summary = "Asynchronously creates new category")
     @Path("/async")
-    public Response asynchronousPost() {
+    public Response asynchronousPost(@Parameter(hidden = true) @HeaderParam("requestId") String requestId) {
 
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
         try {
             String requestBody = "{\n" +
                     "\"name\": \"Nova kategorija\"\n" +
@@ -111,16 +125,17 @@ public class MerchantsResource {
                     .thenAccept(s -> log.log(Level.INFO, String.format("Post je nazaj! Dobili smo %s.", s)));
 
         } catch (Exception e) {
-            log.log(Level.SEVERE, String.format("Post was unsuccessful because of %s.", e));
+            log.log(Level.SEVERE, String.format("Post was unsuccessful because of %s.", e) + " - requestId: " + requestId);
         }
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.OK).header("requestId", requestId).build();
     }
 
 
     @GET
     @Operation(description = "Method used to demonstrate asynchronous get call. Calls a slow method that will return a greeting.", summary = "Asynchronously calls a dummy method")
     @Path("/async")
-    public Response asynchronousGet() {
+    public Response asynchronousGet(@Parameter(hidden = true) @HeaderParam("requestId") String requestId) {
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
 
         try {
             HttpRequest request = HttpRequest.newBuilder()
@@ -139,7 +154,7 @@ public class MerchantsResource {
         } catch (Exception e) {
             log.log(Level.SEVERE, String.format("Post was unsuccessful because of %s.", e));
         }
-        return Response.status(Response.Status.OK).build();
+        return Response.status(Response.Status.OK).header("requestId", requestId).build();
     }
 
     /**
@@ -173,7 +188,6 @@ public class MerchantsResource {
         return Math.round(convertedValue * 100f) / 100f;
     }
 
-
     @GET
     @Operation(description = "Get information about a specific merchant. Including their products and prices.", summary = "Get merchant information")
     @APIResponses({
@@ -183,9 +197,10 @@ public class MerchantsResource {
                             schema = @Schema(implementation = Merchant.class))
             )})
     @Path("/{merchantId}")
-    public Response getMerchants(@Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
+    public Response getMerchants(@Parameter(hidden = true) @HeaderParam("requestId") String requestId,
+                                 @Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
                                  @Parameter(description = "Three letter currency code.", example = "RUB") @QueryParam("want") String wantCurrency) {
-
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
         Merchant merchant = merchantBean.getMerchants(merchantId);
 
         if (merchant == null) {
@@ -206,7 +221,7 @@ public class MerchantsResource {
                     content,
                     objectMapper.getTypeFactory().constructCollectionType(List.class, Product.class));
         } catch (JsonProcessingException e) {
-            log.log(Level.SEVERE, String.format("%s : Can not parse json to java object.", this.getClass().getName()));
+            log.log(Level.SEVERE, String.format("%s : Can not parse json to java object.", this.getClass().getName()) + " - requestId: " + requestId);
         }
         Set<Integer> productIdsForMerchant = merchant.getPrices().stream().map(Price::getProductId).collect(Collectors.toSet());
         Set<Product> productsForMerchant = products.stream().filter(p -> productIdsForMerchant.contains(p.getProductId())).collect(Collectors.toSet());
@@ -225,20 +240,22 @@ public class MerchantsResource {
         merchant.setProducts(productsForMerchant);
         merchant.setPrices(null);  // ce je to zakomentirano (ali odstranjeno), vracamo do neke mere podvojene podatke
 
-        log.info(String.format("Fetching merchant for id %d.", merchantId));
-        return Response.status(Response.Status.OK).entity(merchant).build();
+        log.info(String.format("Fetching merchant for id %d.", merchantId) + " - requestId: " + requestId);
+        return Response.status(Response.Status.OK).header("requestId", requestId).entity(merchant).build();
     }
 
 
     @GET
     @Operation(description = "Get prices for all merchants that have the selected product.", summary = "Get prices for product")
     @Path("/compareprices/{productId}")
-    public Response compareMerchantPrices(@Parameter(description = "Product ID.", required = true, example = "1001") @PathParam("productId") Integer productId,
+    public Response compareMerchantPrices(@Parameter(hidden = true) @HeaderParam("requestId") String requestId,
+                                          @Parameter(description = "Product ID.", required = true, example = "1001") @PathParam("productId") Integer productId,
                                           @Parameter(description = "Three letter currency code", example = "RUB") @QueryParam("want") String wantCurrency) throws JsonProcessingException {
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
 
         String content = callRestGet(microserviceLocations.getProducts() + "/v1/products/" + productId);
         if (content == null) {
-            log.log(Level.WARNING, String.format("Product for id %d was not found.", productId));
+            log.log(Level.WARNING, String.format("Product for id %d was not found.", productId) + " - requestId: " + requestId);
             return Response.status(Response.Status.BAD_REQUEST).build();
         }
 
@@ -263,8 +280,8 @@ public class MerchantsResource {
         comparison.setProduct(product);
         comparison.setPrices(pricesForProduct);
 
-        log.info(String.format("Comparing prices for product with id %s", productId));
-        return Response.status(Response.Status.OK).entity(comparison).build();
+        log.info(String.format("Comparing prices for product with id %s", productId) + " - requestId: " + requestId);
+        return Response.status(Response.Status.OK).header("requestId", requestId).entity(comparison).build();
     }
 
     /**
@@ -334,8 +351,8 @@ public class MerchantsResource {
                     examples = @ExampleObject(name = "Adding new merchant", value = "{\n" +
                             "    \"name\": \"Hofer\"\n" +
                             "}")))
-    public Response createMerchant(
-            Merchant merchant) {
+    public Response createMerchant(@Parameter(hidden = true) @HeaderParam("requestId") String requestId, Merchant merchant) {
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
 
         if (merchant.getName() == null) {
             return Response.status(Response.Status.BAD_REQUEST).build();
@@ -343,8 +360,8 @@ public class MerchantsResource {
             merchant = merchantBean.createMerchants(merchant);
         }
 
-        log.info(String.format("New merchant with id %d was created.", merchant.getMerchantId()));
-        return Response.status(Response.Status.CONFLICT).entity(merchant).build();
+        log.info(String.format("New merchant with id %d was created.", merchant.getMerchantId()) + " - requestId: " + requestId);
+        return Response.status(Response.Status.OK).header("requestId", requestId).entity(merchant).build();
     }
 
 
@@ -356,12 +373,14 @@ public class MerchantsResource {
                     description = "Merchant successfully updated.")
     })
     @Path("{merchantId}")
-    public Response putMerchant(@Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
+    public Response putMerchant(@Parameter(hidden = true) @HeaderParam("requestId") String requestId,
+                                @Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
                                 @RequestBody(
                                         description = "DTO object with merchant information.",
                                         required = true, content = @Content(
                                         schema = @Schema(implementation = Merchant.class)))
                                         Merchant merchant) {
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
 
         merchant = merchantBean.putMerchants(merchantId, merchant);
 
@@ -369,9 +388,8 @@ public class MerchantsResource {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        log.info(String.format("Merchant with id %d was deleted.", merchantId));
-        return Response.status(Response.Status.OK).build();
-
+        log.info(String.format("Merchant with id %d was updated.", merchantId) + " - requestId: " + requestId);
+        return Response.status(Response.Status.OK).header("requestId", requestId).build();
     }
 
     @DELETE
@@ -387,14 +405,17 @@ public class MerchantsResource {
             )
     })
     @Path("{merchantId}")
-    public Response deleteMerchant(@Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId) {
+    public Response deleteMerchant(@Parameter(hidden = true) @HeaderParam("requestId") String requestId,
+                                   @Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId) {
+        requestId = requestId != null ? requestId : UUID.randomUUID().toString();
 
         boolean deleted = merchantBean.deleteMerchants(merchantId);
 
+        log.info("Item deleted from DB" + " - requestId: " + requestId);
         if (deleted) {
-            return Response.status(Response.Status.NO_CONTENT).build();
+            return Response.status(Response.Status.NO_CONTENT).header("requestId", requestId).build();
         } else {
-            return Response.status(Response.Status.NOT_FOUND).build();
+            return Response.status(Response.Status.NOT_FOUND).header("requestId", requestId).build();
         }
     }
 

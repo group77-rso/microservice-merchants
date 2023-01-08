@@ -11,6 +11,7 @@ import com.merchants.lib.Product;
 import com.merchants.services.beans.MerchantBean;
 import com.merchants.services.beans.PriceBean;
 import com.merchants.services.config.MicroserviceLocations;
+import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
@@ -56,6 +57,7 @@ import java.util.stream.Collectors;
 @Path("/merchants")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@CrossOrigin
 public class MerchantsResource {
 
     private Logger log = Logger.getLogger(MerchantsResource.class.getName());
@@ -69,7 +71,7 @@ public class MerchantsResource {
 
     @Inject
     private MicroserviceLocations microserviceLocations;
-    private static HttpURLConnection conn;
+//    private static HttpURLConnection conn;
 
     @Context
     protected UriInfo uriInfo;
@@ -292,6 +294,7 @@ public class MerchantsResource {
      */
     private String callRestGet(String urlString) {
         StringBuilder content = new StringBuilder();
+        HttpURLConnection conn;
         try {
             URL url = new URL(urlString);
             conn = (HttpURLConnection) url.openConnection();
@@ -316,10 +319,9 @@ public class MerchantsResource {
                 content.append(inputLine);
             }
             in.close();
+            conn.disconnect();
         } catch (IOException e) {
             log.log(Level.SEVERE, String.format("Connecting %s was unsuccessful. Error %s occured.", urlString, e.getMessage()));
-        } finally {
-            conn.disconnect();
         }
         return content.toString();
     }

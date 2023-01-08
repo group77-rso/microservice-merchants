@@ -14,6 +14,7 @@ import javax.persistence.TypedQuery;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.core.UriInfo;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -162,7 +163,11 @@ public class PriceBean {
         String sql = "SELECT p FROM PriceEntity p" +
                 " LEFT JOIN FETCH p.merchant m" +
                 " WHERE p.productId = :productId";
-
+        try {
+            Thread.sleep(new Random().nextInt(2000));
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         List<PriceEntity> result = em.createQuery(sql, PriceEntity.class)
                 .setParameter("productId", productId)
                 .getResultList();

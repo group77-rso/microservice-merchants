@@ -7,6 +7,10 @@ kumuluzee:
     base-url: http://localhost:8081
     http:
       port: 8081
+  cors-filter:
+    annotations:
+      my-resource:
+        allow-origin: "*"
   datasources:
     - jndi-name: jdbc/MerchantsDS
       connection-url: jdbc:postgresql://localhost:5432/merchants

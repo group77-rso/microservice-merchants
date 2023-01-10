@@ -52,12 +52,9 @@ public class MerchantsQueriesAndMutations {
 
     @Query
     public Merchant getMerchant(@Name("Merchant_id") Integer id) {
-        return merchantBean.getMerchants(id);
-    }
-
-    @Query
-    public Merchant getMerchantPrices(@Name("Merchant_id") Integer id) {
-        return merchantBean.getMerchants(id);
+        Merchant merchant = merchantBean.getMerchants(id);
+        setProducts(List.of(merchant));
+        return merchant;
     }
 
     // MUTATIONS
@@ -105,6 +102,7 @@ public class MerchantsQueriesAndMutations {
                 for (Product product : merchant.getProducts()) {
                     Optional<Price> price = merchant.getPrices().stream().filter(p -> p.getProductId().equals(product.getProductId())).findFirst();
                     price.ifPresent(value -> product.setPrice(value.getPrice()));
+                    price.ifPresent(value -> product.setProductLink(value.getProductLink()));
                 }
             }
 

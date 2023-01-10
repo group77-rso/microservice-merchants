@@ -13,7 +13,7 @@ import java.net.URL;
 
 @Readiness
 @ApplicationScoped
-public class MerchantsDependenciesHelath implements HealthCheck {
+public class MerchantsDependenciesHealth implements HealthCheck {
 
     @Inject
     private MicroserviceLocations microserviceLocations;
@@ -22,9 +22,9 @@ public class MerchantsDependenciesHelath implements HealthCheck {
     public HealthCheckResponse call() {
         String urlProducts = microserviceLocations.getProducts() + "/v1/products/ping/";
         if (pingDependency(urlProducts)) {
-            return HealthCheckResponse.up(MerchantsDependenciesHelath.class.getSimpleName());
+            return HealthCheckResponse.up(MerchantsDependenciesHealth.class.getSimpleName());
         }
-        return HealthCheckResponse.down(MerchantsDependenciesHelath.class.getSimpleName());
+        return HealthCheckResponse.down(MerchantsDependenciesHealth.class.getSimpleName());
     }
 
     private boolean pingDependency(String url) {

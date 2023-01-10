@@ -195,9 +195,9 @@ public class MerchantsResource {
                             schema = @Schema(implementation = Merchant.class))
             )})
     @Path("/{merchantId}")
-    public Response getMerchants(@Parameter(hidden = true) @HeaderParam("requestId") String requestId,
-                                 @Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
-                                 @Parameter(description = "Three letter currency code.", example = "RUB") @QueryParam("want") String wantCurrency) {
+    public Response getMerchant(@Parameter(hidden = true) @HeaderParam("requestId") String requestId,
+                                @Parameter(description = "Merchant ID.", required = true, example = "1001") @PathParam("merchantId") Integer merchantId,
+                                @Parameter(description = "Three letter currency code.", example = "RUB") @QueryParam("want") String wantCurrency) {
         requestId = requestId != null ? requestId : UUID.randomUUID().toString();
         Merchant merchant = merchantBean.getMerchants(merchantId);
 

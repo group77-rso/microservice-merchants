@@ -404,5 +404,11 @@ public class MerchantsResource {
         }
     }
 
+    @GET
+    @Path("/ping")
+    @Operation(description = "Simple ping method only to check if microservice is responding.", summary = "Ping")
+    public Response ping() {
+        return Response.status(Response.Status.OK).build();
+    }
 
 }

@@ -1,5 +1,11 @@
 package com.merchants.services.beans;
 
+import com.kumuluz.ee.rest.beans.QueryParameters;
+import com.kumuluz.ee.rest.utils.JPAUtils;
+import com.merchants.lib.Merchant;
+import com.merchants.models.converters.MerchantsConverter;
+import com.merchants.models.entities.MerchantsEntity;
+
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
 import javax.persistence.EntityManager;
@@ -9,13 +15,6 @@ import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-
-import com.kumuluz.ee.rest.beans.QueryParameters;
-import com.kumuluz.ee.rest.utils.JPAUtils;
-
-import com.merchants.lib.Merchant;
-import com.merchants.models.converters.MerchantsConverter;
-import com.merchants.models.entities.MerchantsEntity;
 
 
 @RequestScoped
@@ -34,6 +33,15 @@ public class MerchantBean {
         List<MerchantsEntity> resultList = query.getResultList();
 
         return resultList.stream().map(MerchantsConverter::toDto).collect(Collectors.toList());
+    }
+
+    public List<Merchant> getMerchantsWithPrices() {
+
+        String sql = "SELECT DISTINCT m FROM MerchantsEntity m " +
+                "LEFT JOIN FETCH m.prices ps";
+        List<MerchantsEntity> resultList = em.createQuery(sql, MerchantsEntity.class).getResultList();
+
+        return resultList.stream().map(m -> MerchantsConverter.toDto(m, true)).collect(Collectors.toList());
 
     }
 
@@ -67,8 +75,7 @@ public class MerchantBean {
             beginTx();
             em.persist(merchantEntity);
             commitTx();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             rollbackTx();
         }
 
@@ -94,8 +101,7 @@ public class MerchantBean {
             updatedMerchantsEntity.setId(c.getId());
             updatedMerchantsEntity = em.merge(updatedMerchantsEntity);
             commitTx();
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             rollbackTx();
         }
 
@@ -111,12 +117,10 @@ public class MerchantBean {
                 beginTx();
                 em.remove(merchant);
                 commitTx();
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 rollbackTx();
             }
-        }
-        else {
+        } else {
             return false;
         }
 

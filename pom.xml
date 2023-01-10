@@ -32,6 +32,7 @@
         <kumuluzee-metrics.version>2.3.0</kumuluzee-metrics.version>
         <kumuluzee-logs.version>1.4.6</kumuluzee-logs.version>
         <kumuluzee-cors.version>2.0.0</kumuluzee-cors.version>
+        <kumuluzee-graphql.version>1.1.0</kumuluzee-graphql.version>
     </properties>
 
     <dependencyManagement>
@@ -131,6 +132,18 @@
                 <groupId>io.swagger.core.v3</groupId>
                 <artifactId>swagger-core</artifactId>
                 <version>2.2.7</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.kumuluz.ee.graphql</groupId>
+                <artifactId>kumuluzee-graphql-ui</artifactId>
+                <version>${kumuluzee-graphql.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.kumuluz.ee.graphql</groupId>
+                <artifactId>kumuluzee-graphql-mp</artifactId>
+                <version>${kumuluzee-graphql.version}</version>
             </dependency>
 
         </dependencies>

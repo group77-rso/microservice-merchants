@@ -63,3 +63,8 @@ kubectl delete pod merchants-deployment-6f59c5d96c-rjz46
 ```
 Secrets: https://kubernetes.io/docs/concepts/configuration/secret/
 
+## GraphQl
+
+Available at: `localhost:8081/graphql`
+
+User interface at: `localhost:8081/graphiql/`

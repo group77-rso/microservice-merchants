@@ -3,6 +3,7 @@ package com.merchants.api.v1.resources;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import com.kumuluz.ee.logs.cdi.Log;
 import com.merchants.lib.Comparison;
 import com.merchants.lib.Merchant;
@@ -11,7 +12,6 @@ import com.merchants.lib.Product;
 import com.merchants.services.beans.MerchantBean;
 import com.merchants.services.beans.PriceBean;
 import com.merchants.services.config.MicroserviceLocations;
-import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import org.eclipse.microprofile.openapi.annotations.Operation;
 import org.eclipse.microprofile.openapi.annotations.enums.SchemaType;
 import org.eclipse.microprofile.openapi.annotations.headers.Header;
@@ -30,17 +30,14 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -60,7 +57,7 @@ import java.util.stream.Collectors;
 @CrossOrigin
 public class MerchantsResource {
 
-    private Logger log = Logger.getLogger(MerchantsResource.class.getName());
+    private final Logger log = Logger.getLogger(MerchantsResource.class.getName());
     private Float conversion;
 
     @Inject
@@ -71,7 +68,6 @@ public class MerchantsResource {
 
     @Inject
     private MicroserviceLocations microserviceLocations;
-//    private static HttpURLConnection conn;
 
     @Context
     protected UriInfo uriInfo;
@@ -293,37 +289,24 @@ public class MerchantsResource {
      * @return response content as a string
      */
     private String callRestGet(String urlString) {
-        StringBuilder content = new StringBuilder();
-        HttpURLConnection conn;
         try {
-            URL url = new URL(urlString);
-            conn = (HttpURLConnection) url.openConnection();
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(urlString))
+                    .timeout(Duration.ofMinutes(2))
+                    .header("Content-Type", "application/json")
+                    .GET()
+                    .build();
 
-            // Request setup
-            conn.setRequestMethod("GET");
-            conn.setConnectTimeout(5000);// 5000 milliseconds = 5 seconds
-            conn.setReadTimeout(5000);
-            conn.setRequestProperty("Content-Type", "application/json");
+            String response = HttpClient.newBuilder()
+                    .build()
+                    .send(request, HttpResponse.BodyHandlers.ofString())
+                    .body();
 
-            int status = conn.getResponseCode();
-            if (status > 300) {
-                log.log(Level.SEVERE, String.format("Reaching %s failed with status %d.", url, status));
-                conn.disconnect();
-                return null;
-            }
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8));
-            String inputLine;
-
-            while ((inputLine = in.readLine()) != null) {
-                content.append(inputLine);
-            }
-            in.close();
-            conn.disconnect();
-        } catch (IOException e) {
+            return response;
+        } catch (IOException | InterruptedException e) {
             log.log(Level.SEVERE, String.format("Connecting %s was unsuccessful. Error %s occured.", urlString, e.getMessage()));
         }
-        return content.toString();
+        return "";
     }
 
     /**

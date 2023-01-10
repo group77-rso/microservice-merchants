@@ -46,6 +46,15 @@ kumuluzee:
               </Root>
           </Loggers>
       </Configuration>'
+  graphql:
+    exceptions:
+      show-error-message:
+        - com.example.exceptions.ShownRuntimeException
+  dev:
+    scan-libraries:
+      - merchants-services
+      - merchants-models
+      - merchants-lib
 rest-properties:
   maintenance-mode: false
 microservice-locations:

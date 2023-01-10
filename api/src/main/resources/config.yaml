@@ -57,5 +57,6 @@ kumuluzee:
       - merchants-lib
 rest-properties:
   maintenance-mode: false
+  broken: false
 microservice-locations:
   products: http://localhost:8080

@@ -268,7 +268,7 @@ public class MerchantsResource {
         // ce smo nastavili parameter za pretvarjanje valut
         if (wantCurrency != null) {
             pricesForProduct.forEach(price -> {
-                Float newPrice = convertCurrency("EUR", wantCurrency, String.valueOf(price));
+                Float newPrice = convertCurrency("EUR", wantCurrency, String.valueOf(price.getPrice()));
                 price.setPrice(newPrice);
             });
             this.conversion = null;

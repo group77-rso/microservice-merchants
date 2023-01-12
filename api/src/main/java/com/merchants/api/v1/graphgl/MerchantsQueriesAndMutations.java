@@ -1,6 +1,7 @@
 package com.merchants.api.v1.graphgl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kumuluz.ee.cors.annotations.CrossOrigin;
 import com.merchants.lib.Merchant;
 import com.merchants.lib.Price;
 import com.merchants.lib.Product;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 
 @RequestScoped
 @GraphQLApi
+@CrossOrigin
 public class MerchantsQueriesAndMutations {
 
     private final Logger log = Logger.getLogger(MerchantsQueriesAndMutations.class.getName());

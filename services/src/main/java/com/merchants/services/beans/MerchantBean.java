@@ -5,6 +5,7 @@ import com.kumuluz.ee.rest.utils.JPAUtils;
 import com.merchants.lib.Merchant;
 import com.merchants.models.converters.MerchantsConverter;
 import com.merchants.models.entities.MerchantsEntity;
+import org.eclipse.microprofile.metrics.annotation.Counted;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -35,6 +36,7 @@ public class MerchantBean {
         return resultList.stream().map(MerchantsConverter::toDto).collect(Collectors.toList());
     }
 
+    @Counted(name = "getMerchantsWithPrices_counter")
     public List<Merchant> getMerchantsWithPrices() {
 
         String sql = "SELECT DISTINCT m FROM MerchantsEntity m " +

@@ -5,6 +5,8 @@ import com.kumuluz.ee.rest.utils.JPAUtils;
 import com.merchants.lib.Price;
 import com.merchants.models.converters.PriceConverter;
 import com.merchants.models.entities.PriceEntity;
+import org.eclipse.microprofile.metrics.annotation.Counted;
+import org.eclipse.microprofile.metrics.annotation.Timed;
 
 import javax.enterprise.context.RequestScoped;
 import javax.inject.Inject;
@@ -29,6 +31,7 @@ public class PriceBean {
     @PersistenceContext
     private EntityManager em;
 
+    @Timed(name = "getPrices_timer")
     public List<Price> getPrices() {
 
         TypedQuery<PriceEntity> query = em.createNamedQuery(
@@ -99,6 +102,7 @@ public class PriceBean {
         return PriceConverter.toDto(priceEntity);
     }
 
+    @Counted(name = "edit_price_counter")
     public Price putPrices(Integer id, Price price) {
 
         PriceEntity c = em.find(PriceEntity.class, id);
@@ -158,6 +162,7 @@ public class PriceBean {
         }
     }
 
+    @Timed(name = "findPricesForProduct_timer")
     public Set<Price> findPricesForProduct(Integer productId) {
 
         String sql = "SELECT p FROM PriceEntity p" +
@@ -176,7 +181,6 @@ public class PriceBean {
             throw new NotFoundException();
         }
 
-        Set<Price> priceList = result.stream().map(PriceConverter::toDto).collect(Collectors.toSet());
-        return priceList;
+        return result.stream().map(PriceConverter::toDto).collect(Collectors.toSet());
     }
 }

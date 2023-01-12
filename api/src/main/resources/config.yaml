@@ -16,7 +16,7 @@ kumuluzee:
       connection-url: jdbc:postgresql://localhost:5432/merchants
       username: dbuser
       password: postgres
-      max-pool-size: 20
+      max-pool-size: 5
   health:
     checks:
       data-source-health-check:

@@ -45,6 +45,7 @@ public class MerchantsQueriesAndMutations {
     // QUERIES
 
     @Query
+    @CrossOrigin
     public List<Merchant> getMerchants() {
 
         List<Merchant> merchants = merchantBean.getMerchantsWithPrices();
@@ -53,6 +54,7 @@ public class MerchantsQueriesAndMutations {
     }
 
     @Query
+    @CrossOrigin
     public Merchant getMerchant(@Name("Merchant_id") Integer id) {
         Merchant merchant = merchantBean.getMerchants(id);
         setProducts(List.of(merchant));

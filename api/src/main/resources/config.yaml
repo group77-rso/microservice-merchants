@@ -40,7 +40,7 @@ kumuluzee:
           </Appenders>
           <Loggers>
               <!-- Default logger -->
-              <Root level="all">
+              <Root level="debug">
                   <AppenderRef ref="console" level="info" />
                   <AppenderRef ref="logstash" level="trace" />
               </Root>
